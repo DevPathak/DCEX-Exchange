@@ -21,10 +21,10 @@ export const authConfig = {
 		}),
 	],
 	callbacks: {
-		session: ({ session, token }: any) => {
+		session: ({ session, token }: any): session => {
 			const newSession: session = session as session;
 			if (newSession.user && token.uid) {
-				newSession.user.uid = token.uid ?? "}";
+				newSession.user.uid = token.uid ?? "";
 			}
 			return newSession!;
 		},
@@ -62,6 +62,7 @@ export const authConfig = {
 				const privateKey = keypair.secretKey;
 				console.log(publicKey);
 				console.log(privateKey);
+
 				await prisma.user.create({
 					data: {
 						username: email,
