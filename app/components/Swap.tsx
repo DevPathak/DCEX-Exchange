@@ -1,6 +1,8 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { SUPPORTED_TOKENS, TokenDetails } from "../lib/tokens";
 import { TokenWithBalance } from "../api/hooks/useTokens";
+import { PrimaryButton } from "./Button";
+import axios from "axios";
 
 export function Swap({
 	publicKey,
@@ -14,11 +16,42 @@ export function Swap({
 }) {
 	const [baseAsset, setBaseAsset] = useState(SUPPORTED_TOKENS[0]);
 	const [quoteAsset, setQuoteAsset] = useState(SUPPORTED_TOKENS[1]);
+	const [baseAmount, setBaseAmount] = useState<string>();
+	const [quoteAmount, setQuoteAmount] = useState<string>();
+	const [fetchingQuote, setFetchingQuote] = useState(false);
+
+	useEffect(() => {
+		if (!baseAmount) {
+			return;
+		}
+		setFetchingQuote(true);
+		axios
+			.get(
+				`https://quote-api.jup.ag/v6/quote?
+					inputMint=${baseAsset.mint}&
+					outputMint=${quoteAsset.mint}&
+					amount=${Number(baseAmount) * 10 ** baseAsset.decimals}
+					&slippageBps=50`
+			)
+			.then((res) => {
+				setQuoteAmount(
+					(
+						Number(res.data.outAmount) / Number(10 ** quoteAsset.decimals)
+					).toString()
+				);
+				setFetchingQuote(false);
+			});
+	}, [baseAsset, quoteAmount, baseAmount]);
 
 	return (
 		<div className="p-12">
 			<div className="text-2xl font-bold pb-4">Swap Tokens</div>
 			<SwapInputRow
+				inputDisabled={false}
+				amount={baseAmount}
+				onAmountChange={(value: string) => {
+					setBaseAmount(value);
+				}}
 				onSelect={(asset) => {
 					setBaseAsset(asset);
 				}}
@@ -52,6 +85,9 @@ export function Swap({
 				</div>
 			</div>
 			<SwapInputRow
+				inputLoading={fetchingQuote}
+				inputDisabled={true}
+				amount={quoteAmount}
 				onSelect={(asset) => {
 					setQuoteAsset(asset);
 				}}
@@ -59,7 +95,22 @@ export function Swap({
 				title={"You Receive:"}
 				topBorderEnabled={false}
 				bottomBorderEnabled={true}
+				subtitle={
+					<div className="text-slate-400 pt-1.5 text-sm flex">
+						<div className="font-normal pr-1">Current Balance: </div>
+						<div className="font-semibold">
+							{
+								tokenBalances?.tokens.find((x) => x.name === quoteAsset.name)
+									?.balance
+							}{" "}
+							{quoteAsset.name}
+						</div>
+					</div>
+				}
 			/>
+			<div className="flex justify-end pt-4">
+				<PrimaryButton onClick={() => {}} children={"Confirm & Swap"} />
+			</div>
 		</div>
 	);
 }
@@ -71,6 +122,10 @@ function SwapInputRow({
 	subtitle,
 	topBorderEnabled,
 	bottomBorderEnabled,
+	amount,
+	onAmountChange,
+	inputDisabled,
+	inputLoading,
 }: {
 	onSelect: (asset: TokenDetails) => void;
 	selectedToken: TokenDetails;
@@ -78,6 +133,10 @@ function SwapInputRow({
 	subtitle?: ReactNode;
 	topBorderEnabled: boolean;
 	bottomBorderEnabled: boolean;
+	amount?: string;
+	onAmountChange?: (value: string) => void;
+	inputDisabled: boolean;
+	inputLoading?: boolean;
 }) {
 	return (
 		<div
@@ -89,6 +148,19 @@ function SwapInputRow({
 				<div className="text-xs font-semibold mb-1">{title}</div>
 				<AssetSelector selectedToken={selectedToken} onSelect={onSelect} />
 				{subtitle}
+			</div>
+			<div>
+				<input
+					disabled={inputDisabled}
+					onChange={(e) => {
+						onAmountChange?.(e.target.value);
+					}}
+					placeholder="0"
+					type="text"
+					value={inputLoading ? "Fetching..." : amount}
+					className="p-6 outline-none text-4xl bg-white"
+					dir="rtl"
+				/>
 			</div>
 		</div>
 	);
