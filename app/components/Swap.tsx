@@ -112,10 +112,17 @@ export function Swap({
 			/>
 			<div className="flex justify-end pt-4">
 				<PrimaryButton
-					onClick={() => {
-						axios.post("/api/swap", {
-							quoteResponse,
-						});
+					onClick={async () => {
+						try {
+							const res = await axios.post("/api/swap", {
+								quoteResponse,
+							});
+							if (res.data.txnId) {
+								alert("Swap Successfull!");
+							}
+						} catch (e) {
+							alert("Error while sending transaction!");
+						}
 					}}
 					children={"Confirm & Swap"}
 				/>

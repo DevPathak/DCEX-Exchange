@@ -1,11 +1,15 @@
 import prisma from "@/app/db";
 import { authConfig } from "@/app/lib/auth";
-import { connection } from "@/app/lib/constants";
-import { Keypair, VersionedTransaction } from "@solana/web3.js";
+// import { connection } from "@/app/lib/constants";
+import { Connection, Keypair, VersionedTransaction } from "@solana/web3.js";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
+	// const connection = new Connection("https://api.mainnet-beta.solana.com"); //Mainnet
+	const connection = new Connection(
+		"https://mainnet.helius-rpc.com/?api-key=5350fdcc-bc67-44d1-bd04-203ddac9a385" //Helius
+	);
 	const data: {
 		quoteResponse: any;
 	} = await req.json();
@@ -80,10 +84,11 @@ export async function POST(req: NextRequest) {
 		signature: txid,
 	});
 
+	console.log(`https://solscan.io/tx/${txid}`);
+
 	return NextResponse.json({
 		txid,
 	});
-	console.log(`https://solscan.io/tx/${txid}`);
 }
 
 function getPrivateKey(privateKey: string) {
