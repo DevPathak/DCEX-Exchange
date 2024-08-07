@@ -19,6 +19,7 @@ export function Swap({
 	const [baseAmount, setBaseAmount] = useState<string>();
 	const [quoteAmount, setQuoteAmount] = useState<string>();
 	const [fetchingQuote, setFetchingQuote] = useState(false);
+	const [quoteResponse, setQuoteResponse] = useState(null);
 
 	useEffect(() => {
 		if (!baseAmount) {
@@ -40,6 +41,7 @@ export function Swap({
 					).toString()
 				);
 				setFetchingQuote(false);
+				setQuoteResponse(res.data);
 			});
 	}, [baseAsset, quoteAmount, baseAmount]);
 
@@ -109,7 +111,14 @@ export function Swap({
 				}
 			/>
 			<div className="flex justify-end pt-4">
-				<PrimaryButton onClick={() => {}} children={"Confirm & Swap"} />
+				<PrimaryButton
+					onClick={() => {
+						axios.post("/api/swap", {
+							quoteResponse,
+						});
+					}}
+					children={"Confirm & Swap"}
+				/>
 			</div>
 		</div>
 	);

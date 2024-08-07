@@ -50,7 +50,7 @@ async function getAccountBalance(
 	try {
 		const account = await getAccount(connection, ata);
 		// const mint = await getMint(connection, new PublicKey(token.mint));
-		return Number(account.amount) / 10 ** decimals;
+		return Number(account.amount) / 10 ** token.decimals;
 	} catch (e) {
 		console.log("error here 1" + e);
 		return 0;
